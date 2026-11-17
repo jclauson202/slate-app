@@ -14,6 +14,8 @@
 <style>
 :root{--bg:#000;--card:#0c0c0c;--card2:#141414;--line:#1d1d1d;--fg:#dcdcdc;--dim:#6f6f6f;--acc:#9caf88;--acc2:#c4d3b3;--danger:#c9604f}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+/* iOS 26 home-screen apps get a viewport short by the status bar while the document is shorter than the screen (WebKit 301108). Make the document screen-tall. */
+html.sa,html.sa body{min-height:min(100lvh,calc(100% + env(safe-area-inset-top,0px)))}
 html,body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.35 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;height:100%;overscroll-behavior:none}
 button,input,select,textarea{font:inherit;color:inherit}
 button{background:none;border:0;padding:0;cursor:pointer}
@@ -26,7 +28,7 @@ header .sub{color:var(--dim);font-size:15px;margin-top:2px}
 .ib:active{background:var(--card2)}
 .ib svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 main{flex:1;overflow-y:auto;padding:4px 14px 24px;-webkit-overflow-scrolling:touch}
-nav{display:flex;border-top:1px solid var(--line);padding:2px 0 calc(min(env(safe-area-inset-bottom, 0px), 14px) + 4px);background:var(--bg)}
+nav{display:flex;border-top:1px solid var(--line);padding:2px 0 max(8px,calc(env(safe-area-inset-bottom, 0px) - 8px));background:var(--bg)}
 nav button{flex:1;padding:7px 0 3px;color:var(--dim);font-size:11px;display:flex;flex-direction:column;align-items:center;gap:2px;letter-spacing:.3px}
 nav button.on{color:var(--acc)}
 nav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
@@ -73,7 +75,7 @@ nav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;st
 .dots i{width:5px;height:5px;border-radius:3px;background:#555}
 .dots i.k{background:var(--acc2)}
 .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:flex-end;z-index:20;padding-top:calc(env(safe-area-inset-top) + 28px)}
-.sheet{width:100%;max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#0e0e0e;border-radius:22px 22px 0 0;padding:0 18px calc(min(env(safe-area-inset-bottom, 0px), 14px) + 18px);border-top:1px solid var(--line)}
+.sheet{width:100%;max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#0e0e0e;border-radius:22px 22px 0 0;padding:0 18px calc(env(safe-area-inset-bottom, 0px) + 18px);border-top:1px solid var(--line)}
 .shead{position:sticky;top:0;z-index:3;display:flex;justify-content:flex-end;padding:12px 0 8px;background:#0e0e0e}
 .donebtn{min-width:84px;height:44px;border-radius:22px;background:var(--acc);color:#000;font-weight:600;font-size:17px;padding:0 22px}
 .sheet h2{margin:0 0 12px;font-size:20px}
@@ -408,18 +410,7 @@ function folderModal(id) {
   document.getElementById("f_name").addEventListener("input", e => { f.name = e.target.value || "Untitled"; save(); });
 }
 let wakeLock = null, wakeMsg = "";
-// Layout test modes: iOS home-screen apps sometimes get a page shorter than the screen. "std" = normal.
 let fitNote = "";
-function fitScreen() {
-  const el = document.getElementById("app"); if (!el) return;
-  const m = S.settings.layout || "std"; let h = "";
-  if (m === "screen") h = Math.max(screen.width, screen.height) + "px";
-  else if (m === "vh") h = "100vh"; else if (m === "lvh") h = "100lvh"; else if (m === "dvh") h = "100dvh";
-  else if (m === "visual" && window.visualViewport) h = Math.round(visualViewport.height) + "px";
-  el.style.height = h; fitNote = m === "std" ? "" : " · layout " + m + " = " + h;
-}
-addEventListener("resize", fitScreen); addEventListener("orientationchange", () => setTimeout(fitScreen, 200));
-if (window.visualViewport) visualViewport.addEventListener("resize", fitScreen);
 function diag() {
   const el = document.getElementById("s_diag"); if (!el) return;
   const probe = css => { const d = document.createElement("div"); d.style.cssText = "position:fixed;visibility:hidden;width:1px;" + css; document.body.appendChild(d); const r = d.offsetHeight, cs = getComputedStyle(d); const out = [r, cs.paddingTop, cs.paddingBottom]; d.remove(); return out; };
@@ -433,7 +424,6 @@ function settingsModal(msg) {
     '<div class="small">' + esc(wakeMsg) + '</div>' +
     '<div class="lab">Color</div><div style="display:flex;gap:12px;flex-wrap:wrap">' + THEMES.map(t => '<button data-act="theme" data-id="' + t.id + '" aria-label="' + t.name + '" style="width:40px;height:40px;border-radius:20px;background:' + t.acc + ';' + (S.settings.theme === t.id ? "outline:2px solid #fff;outline-offset:3px" : "") + '"></button>').join("") + '</div><div class="small">' + esc((THEMES.find(x => x.id === S.settings.theme) || THEMES[0]).name) + '</div>' +
     '<div class="lab">Font</div><div style="display:flex;gap:8px;flex-wrap:wrap">' + FONTS.map(f => '<button class="pill ' + (S.settings.font === f.id ? "on" : "") + '" data-act="font" data-id="' + f.id + '" style="font-family:' + f.css.replace(/"/g, "&quot;") + '">' + f.name + '</button>').join("") + '</div>' +
-    '<div class="lab">Layout (try if the bottom looks wrong)</div><div style="display:flex;gap:8px;flex-wrap:wrap">' + [["std", "Standard"], ["screen", "Screen"], ["vh", "vh"], ["lvh", "lvh"], ["dvh", "dvh"], ["visual", "Visual"]].map(m => '<button class="pill ' + ((S.settings.layout || "std") === m[0] ? "on" : "") + '" data-act="layout" data-id="' + m[0] + '">' + m[1] + '</button>').join("") + '</div>' +
     '<div class="lab">Dim to clock after idle</div><select class="fld" id="s_amb">' + [[0, "Never"], [1, "1 minute"], [2, "2 minutes"], [5, "5 minutes"], [10, "10 minutes"]].map(a => '<option value="' + a[0] + '"' + (S.settings.ambientMin === a[0] ? " selected" : "") + '>' + a[1] + '</option>').join("") + '</select>' +
     '<div class="lab">Backup</div><textarea class="notes" id="s_data" style="min-height:90px;font-size:12px" placeholder="Export fills this box. Paste a backup here to import."></textarea>' +
     '<div class="two"><button class="big" data-act="s_export">Export</button><button class="big" data-act="s_copy">Copy</button><button class="big" data-act="s_import">Import</button></div><div class="small" id="s_msg">' + esc(msg || "") + '</div><div class="small" id="s_diag" style="margin-top:14px"></div>');
@@ -478,7 +468,6 @@ function act(a, t, ev) {
     case "settings": settingsModal(); break;
     case "theme": S.settings.theme = id; save(); applyLook(); settingsModal(); break;
     case "font": S.settings.font = id; save(); applyLook(); settingsModal(); break;
-    case "layout": S.settings.layout = id; save(); fitScreen(); settingsModal(); break;
     case "s_wake": S.settings.wake = !S.settings.wake; save(); t.classList.toggle("on", S.settings.wake); S.settings.wake ? requestWake() : releaseWake(); break;
     case "s_export": document.getElementById("s_data").value = JSON.stringify(S); document.getElementById("s_msg").textContent = "Exported below. Copy it somewhere safe."; break;
     case "s_copy": { const ta = document.getElementById("s_data"); if (!ta.value) ta.value = JSON.stringify(S); try { navigator.clipboard.writeText(ta.value).then(() => document.getElementById("s_msg").textContent = "Copied.", () => { ta.select(); document.getElementById("s_msg").textContent = "Select and copy manually."; }); } catch (e) { ta.select(); } break; }
@@ -585,7 +574,8 @@ document.addEventListener("pointerdown", () => { if (S.settings.wake && !awakeOK
 function checkDay() { const t = todayStr(); if (t !== lastDay) { lastDay = t; calSel = t; calMonth = new Date(parse(t).getFullYear(), parse(t).getMonth(), 1); if (!MD.innerHTML) render(); if (ambOn) ambRender(); } }
 setInterval(checkDay, 20000);
 
-fitScreen(); applyLook(); render(); requestWake(); bump();
+delete S.settings.layout; try { if (navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches)) document.documentElement.classList.add("sa"); } catch (e) {}
+applyLook(); render(); requestWake(); bump();
 if ("serviceWorker" in navigator && /^https?:/.test(location.protocol)) addEventListener("load", () => { try { navigator.serviceWorker.register("sw.js").catch(() => {}); } catch (e) {} });
 </script>
 </body>
