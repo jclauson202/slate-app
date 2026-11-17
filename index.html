@@ -414,10 +414,11 @@ function fitScreen() {
   const el = document.getElementById("app"); if (!el) return;
   const sa = navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
   const full = Math.max(screen.width, screen.height), portrait = innerHeight > innerWidth;
-  if (sa && portrait && innerHeight < full - 20) { el.style.height = full + "px"; fitNote = ", stretched to " + full; }
-  else { el.style.height = ""; fitNote = ""; }
+  // Always stretch in home-screen mode: innerHeight changes after launch on iOS, so it can't be trusted as a trigger.
+  if (sa && portrait) { el.style.height = full + "px"; fitNote = ", stretched to " + full; }
+  else if (!sa) { el.style.height = ""; fitNote = ""; }
 }
-addEventListener("resize", fitScreen); addEventListener("orientationchange", () => setTimeout(fitScreen, 200));
+addEventListener("resize", fitScreen); addEventListener("pageshow", fitScreen); document.addEventListener("visibilitychange", fitScreen); [300, 1000, 2500].forEach(t => setTimeout(fitScreen, t)); addEventListener("orientationchange", () => setTimeout(fitScreen, 200));
 function diag() {
   const el = document.getElementById("s_diag"); if (!el) return;
   const pr = document.createElement("div"); pr.style.cssText = "position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)"; document.body.appendChild(pr);
