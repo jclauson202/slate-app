@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SLATE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SLATE">
+<meta name="theme-color" content="#000000">
+<style>
+:root{--bg:#000;--card:#0c0c0c;--card2:#141414;--line:#1d1d1d;--fg:#dcdcdc;--dim:#6f6f6f;--acc:#9caf88;--acc2:#c4d3b3;--danger:#c9604f}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.35 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;height:100%;overscroll-behavior:none}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:none;border:0;padding:0;cursor:pointer}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left)}
+header{display:flex;align-items:flex-end;justify-content:space-between;padding:18px 20px 10px}
+header h1{margin:0;font-size:30px;font-weight:600;letter-spacing:-.5px}
+header .sub{color:var(--dim);font-size:15px;margin-top:2px}
+.hb{display:flex;gap:6px}
+.ib{width:42px;height:42px;border-radius:21px;display:grid;place-items:center;color:var(--dim)}
+.ib:active{background:var(--card2)}
+.ib svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+main{flex:1;overflow-y:auto;padding:4px 14px 24px;-webkit-overflow-scrolling:touch}
+nav{display:flex;border-top:1px solid var(--line);padding:6px 0 calc(env(safe-area-inset-bottom) + 4px);background:var(--bg)}
+nav button{flex:1;padding:10px 0 6px;color:var(--dim);font-size:12px;display:flex;flex-direction:column;align-items:center;gap:3px;letter-spacing:.3px}
+nav button.on{color:var(--acc)}
+nav svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.sec{color:var(--dim);font-size:12.5px;text-transform:uppercase;letter-spacing:1.2px;margin:18px 8px 8px}
+.row{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:16px;padding:10px 8px 10px 12px;margin-bottom:8px;min-height:64px}
+.row.dn .t{color:var(--dim);text-decoration:line-through;text-decoration-color:#444}
+.chk{flex:none;width:34px;height:34px;border-radius:17px;border:2px solid #3a3a3a;display:grid;place-items:center}
+.chk.on{background:var(--acc);border-color:var(--acc)}
+.chk.on::after{content:"";width:9px;height:16px;border:solid #000;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.main{flex:1;min-width:0}
+.t{font-size:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m{color:var(--dim);font-size:13.5px;margin-top:2px;display:flex;gap:8px;flex-wrap:wrap}
+.tag{color:var(--acc)}
+.fin{flex:none;width:44px;height:44px;border-radius:22px;display:grid;place-items:center;color:#444}
+.fin svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.fin.on{color:var(--acc2)}
+.grip{flex:none;width:44px;height:44px;display:grid;place-items:center;color:var(--dim);touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none}
+.grip svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round}
+.row{transition:transform .16s}
+.del{flex:none;width:40px;height:40px;border-radius:20px;display:grid;place-items:center;color:#7a7a7a}
+.del svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.del.ask{background:var(--danger);color:#fff}
+.row.drag{position:relative;z-index:5;background:#191919;transition:none}
+.ib.on{color:var(--acc)}
+.pill{flex:none;border:1px solid #333;color:var(--dim);border-radius:16px;padding:6px 12px;font-size:14px}
+.pill.on{border-color:var(--acc);color:var(--acc)}
+.add{display:flex;gap:8px;margin-top:14px}
+.add input,.fld{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 14px;outline:none;width:100%}
+.add input:focus,.fld:focus{border-color:#3a3a3a}
+.empty{color:var(--dim);text-align:center;padding:36px 20px}
+.frow{display:flex;align-items:center;gap:14px;background:var(--card);border-radius:16px;padding:16px;margin-bottom:8px}
+.dot{width:12px;height:12px;border-radius:6px;flex:none}
+.frow .n{flex:1;font-size:18px}.frow .c{color:var(--dim)}
+.back{color:var(--acc);padding:6px 10px 6px 0;font-size:16px}
+.cal-h{display:flex;align-items:center;justify-content:space-between;padding:0 4px 8px}
+.cal-h b{font-size:19px;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.dw{color:var(--dim);font-size:12px;text-align:center;padding:4px 0}
+.cell{aspect-ratio:1/1.05;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--fg)}
+.cell.o{color:#4a4a4a}
+.cell.sel{background:var(--card2)}
+.cell.td .d{color:var(--acc);font-weight:700}
+.dots{display:flex;gap:3px;height:6px}
+.dots i{width:5px;height:5px;border-radius:3px;background:#555}
+.dots i.k{background:var(--acc2)}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:flex-end;z-index:20}
+.sheet{width:100%;max-height:92%;overflow-y:auto;background:#0e0e0e;border-radius:22px 22px 0 0;padding:16px 18px calc(env(safe-area-inset-bottom) + 18px);border-top:1px solid var(--line)}
+.sheet h2{margin:0 0 12px;font-size:20px}
+.titlein{width:100%;background:none;border:0;outline:none;font-size:24px;font-weight:600;padding:4px 0 10px}
+.notes{width:100%;min-height:120px;resize:none;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;outline:none;line-height:1.45}
+.sub{margin-top:10px}
+.si{display:flex;align-items:center;gap:10px;padding:4px 0}
+.si .sc{flex:none;width:26px;height:26px;border-radius:8px;border:2px solid #3a3a3a;display:grid;place-items:center}
+.si .sc.on{background:var(--acc);border-color:var(--acc)}
+.si .sc.on::after{content:"";width:6px;height:11px;border:solid #000;border-width:0 2.2px 2.2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.si input{flex:1;min-width:0;background:none;border:0;outline:none;padding:8px 0;font-size:17px}
+.si.dn input{color:var(--dim);text-decoration:line-through;text-decoration-color:#444}
+.si .sx{flex:none;width:32px;height:32px;color:#555;font-size:22px;line-height:1}
+.sub .addsub{width:100%;background:none;border:0;border-top:1px solid var(--line);outline:none;padding:12px 2px 6px;color:var(--fg)}
+.ck{display:inline-flex;align-items:center;gap:5px}
+.ring{flex:none;display:block}
+.ring .arc{transition:stroke-dashoffset 1.4s ease-in-out,stroke .8s}
+#m_barwrap{display:flex;align-items:center;gap:8px;color:var(--dim);font-size:14px;margin-top:12px}
+#m_barwrap:empty{display:none}
+.two{display:flex;gap:10px;margin-top:10px}
+.lab{color:var(--dim);font-size:12.5px;text-transform:uppercase;letter-spacing:1px;margin:14px 2px 6px}
+select.fld,input[type=date].fld{appearance:none;-webkit-appearance:none;min-height:46px}
+.sw{display:flex;align-items:center;justify-content:space-between;background:var(--card);border-radius:14px;padding:13px 14px;margin-top:10px}
+.sw i{width:46px;height:28px;border-radius:14px;background:#2a2a2a;position:relative;flex:none}
+.sw i::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:11px;background:#888}
+.sw.on i{background:var(--acc)}.sw.on i::after{left:21px;background:#000}
+.big{flex:1;padding:15px 10px;border-radius:14px;border:1.5px solid #333;text-align:center;color:var(--fg);font-size:16px}
+.big.on{border-color:var(--acc2);color:var(--acc2)}
+.big.a.on{border-color:var(--acc);color:var(--acc)}
+.danger{color:var(--danger);padding:14px;margin-top:10px;width:100%;text-align:center}
+.small{color:var(--dim);font-size:13.5px;margin:6px 2px}
+#amb{position:fixed;inset:0;background:#000;z-index:50;display:none}
+#amb.show{display:block}
+#amb .in{position:absolute;left:0;right:0;top:0;bottom:0;padding:calc(env(safe-area-inset-top) + 30px) 34px 30px;display:flex;flex-direction:column;justify-content:center;transition:transform 1s}
+#amb .clk{font-size:84px;font-weight:200;color:#5a5a5a;letter-spacing:-2px;line-height:1}
+#amb .dt{color:#3c3c3c;font-size:20px;margin:6px 0 18px}
+#amb .it{color:#4a4a4a;font-size:22px;padding:5px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#amb .it.dn{color:#333}
+#amb .dd{color:var(--acc);opacity:.6}
+#amb .it.dn .dd{opacity:.45}
+#amb .abar{height:4px;border-radius:2px;background:#161616;margin:0 0 22px;overflow:hidden;max-width:100%}
+#amb .abar i{display:block;height:100%;border-radius:2px;background:var(--acc);opacity:.45}
+#amb .ct{color:#3c3c3c;font-size:16px;margin-top:14px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="amb"><div class="in" id="ambin"></div></div>
+<div id="modal"></div>
+<script>
+"use strict";
+/* ---------- storage ---------- */
+const KEY = "dockdo.v1";
+const DEFAULT = () => ({
+  folders: [{id: "f_home", name: "Personal", color: "#9caf88"}, {id: "f_work", name: "Work", color: "#d4b483"}],
+  cards: [],
+  settings: {wake: true, ambientMin: 2, theme: "sage", font: "system"}
+});
+let S;
+function load() {
+  try { const r = localStorage.getItem(KEY); if (r) { const o = JSON.parse(r); if (o && o.cards && o.folders) { o.settings = Object.assign({wake: true, ambientMin: 2, theme: "sage", font: "system"}, o.settings || {}); return o; } } } catch (e) {}
+  return DEFAULT();
+}
+let saveT;
+function save() {
+  clearTimeout(saveT);
+  saveT = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }, 150);
+}
+S = load();
+const THEMES = [
+  {id: "sage", name: "Sage", acc: "#9caf88", acc2: "#c4d3b3"},
+  {id: "pink", name: "Dusty pink", acc: "#c9959f", acc2: "#e0bcc3"},
+  {id: "slate", name: "Grey blue", acc: "#8fa3b8", acc2: "#b9c8d8"},
+  {id: "teal", name: "Blue green", acc: "#6fb0a6", acc2: "#a3d1c9"},
+  {id: "sand", name: "Sand", acc: "#c9a97a", acc2: "#e0cba8"},
+  {id: "lilac", name: "Lilac", acc: "#a99bc4", acc2: "#cbc1de"}
+];
+const FONTS = [
+  {id: "system", name: "iOS default", css: '-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif'},
+  {id: "arial", name: "Arial", css: 'Arial,Helvetica,sans-serif'},
+  {id: "typewriter", name: "Typewriter", css: '"American Typewriter","Courier New",Courier,monospace'},
+  {id: "times", name: "Times New Roman", css: '"Times New Roman",Times,serif'}
+];
+function applyLook() {
+  const t = THEMES.find(x => x.id === S.settings.theme) || THEMES[0], f = FONTS.find(x => x.id === S.settings.font) || FONTS[0], r = document.documentElement.style;
+  r.setProperty("--acc", t.acc); r.setProperty("--acc2", t.acc2); document.body.style.fontFamily = f.css;
+  const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = "#000000";
+}
+function flush() { clearTimeout(saveT); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+addEventListener("pagehide", flush);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flush(); });
+
+/* ---------- dates ---------- */
+const pad = n => String(n).padStart(2, "0");
+const ymd = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+const todayStr = () => ymd(new Date());
+const parse = s => new Date(s + "T00:00:00");
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const nice = s => { const d = parse(s); return DAYS[d.getDay()].slice(0,3) + ", " + MONTHS[d.getMonth()].slice(0,3) + " " + d.getDate(); };
+
+/* ---------- logic ---------- */
+const uid = p => p + Math.random().toString(36).slice(2, 9);
+const byId = id => S.cards.find(c => c.id === id);
+const folderOf = c => S.folders.find(f => f.id === c.folder);
+function repMatch(c, D) {
+  if (c.repeat === "daily") return true;
+  if (c.repeat === "weekdays") { const w = parse(D).getDay(); return w >= 1 && w <= 5; }
+  if (c.repeat === "weekly") return parse(c.date).getDay() === parse(D).getDay();
+  return false;
+}
+function hasDone(c, from, to) { return Object.keys(c.done || {}).some(k => k >= from && k < to); }
+function onDay(c, D) {
+  if (c.done && c.done[D]) return true;
+  if (c.complete) { if (c.completedOn === D) return true; if (c.repeat === "none" || D > c.completedOn) return false; }
+  if (c.repeat !== "none") return !!c.date && c.date <= D && repMatch(c, D);
+  if (c.date === D) return true;
+  if (c.carry && c.date && c.date < D && D <= todayStr() && !c.complete && !hasDone(c, c.date, D)) return true;
+  return false;
+}
+function streak(c, D) {
+  let n = 0; const d = parse(D);
+  if (!(c.done && c.done[D])) d.setDate(d.getDate() - 1);
+  for (let i = 0; i < 400; i++) {
+    const k = ymd(d); if (k < c.date) break;
+    if (repMatch(c, k)) { if (c.done && c.done[k]) n++; else break; }
+    d.setDate(d.getDate() - 1);
+  }
+  return n;
+}
+const subKey = (c, D) => c.repeat !== "none" ? D : "_";
+const subDone = (it, c, D) => !!(it.d && it.d[subKey(c, D)]);
+function subCount(c, D) { const l = c.sub || []; return l.length ? l.filter(i => subDone(i, c, D)).length + "/" + l.length : ""; }
+const hue = f => Math.round(Math.pow(f, 1.8) * 120); // 1/3 ≈ red-orange, 2/3 ≈ amber, full = green
+const lastFrac = {};
+function fracOf(c, D) { const l = c.sub || []; return l.length ? l.filter(i => subDone(i, c, D)).length / l.length : 0; }
+function ringHtml(c, D, key, size) {
+  const f = fracOf(c, D), prev = key in lastFrac ? lastFrac[key] : f, col = "hsl(" + hue(f) + ",48%,50%)";
+  return '<svg class="ring" width="' + size + '" height="' + size + '" viewBox="0 0 20 20" data-f="' + f + '" data-k="' + key + '"><circle cx="10" cy="10" r="7.5" fill="none" stroke="#242424" stroke-width="3"/><circle class="arc" cx="10" cy="10" r="7.5" fill="none" stroke-width="3" pathLength="100" stroke-dasharray="100" stroke-dashoffset="' + (100 - prev * 100) + '" transform="rotate(-90 10 10)" style="stroke:' + col + '"/></svg>';
+}
+function settleRings() {
+  document.querySelectorAll(".ring[data-f]").forEach(r => {
+    const f = +r.dataset.f, arc = r.querySelector(".arc"), k = r.dataset.k;
+    lastFrac[k] = f;
+    requestAnimationFrame(() => requestAnimationFrame(() => { arc.style.strokeDashoffset = 100 - f * 100; arc.style.stroke = "hsl(" + hue(f) + ",48%,50%)"; }));
+  });
+}
+function toggleDay(c, D) {
+  c.done = c.done || {};
+  if (c.complete && c.completedOn === D) { c.complete = false; c.completedOn = null; delete c.done[D]; }
+  else if (c.done[D]) delete c.done[D]; else c.done[D] = 1;
+  save();
+}
+function toggleFin(c, D) {
+  c.done = c.done || {};
+  if (c.complete) { c.complete = false; c.completedOn = null; delete c.done[D]; }
+  else { c.complete = true; c.completedOn = D; c.done[D] = 1; }
+  save();
+}
+function newCard(title, o) {
+  const c = Object.assign({id: uid("c_"), title, notes: "", folder: null, date: null, repeat: "none", carry: true, done: {}, complete: false, completedOn: null, sub: [], created: todayStr()}, o || {});
+  S.cards.push(c); save(); return c;
+}
+
+/* ---------- ui state ---------- */
+let tab = "today", openFolder = null, calMonth = (() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); })(), calSel = todayStr();
+let reorder = false, showFinished = false, confirmKey = null, lastDay = todayStr();
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+const I = {
+  today: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></svg>',
+  folders: '<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',
+  cal: '<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
+  moon: '<svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/></svg>',
+  gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>',
+  dbl: '<svg viewBox="0 0 24 24"><path d="M2 12.5l4.5 4.5L15 7.5M10 15.5l2 2L21.5 7.5"/></svg>',
+  sort: '<svg viewBox="0 0 24 24"><path d="M8 4v16M8 4L4.5 7.5M8 4l3.5 3.5M16 20V4M16 20l-3.5-3.5M16 20l3.5-3.5"/></svg>',
+  trash: '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l.8 12.5h9.4L17.5 7M10 11v5M14 11v5"/></svg>',
+  grip: '<svg viewBox="0 0 24 24"><path d="M5 8h14M5 12h14M5 16h14"/></svg>',
+  up: '<svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg>',
+  down: '<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>',
+  prev: '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>',
+  next: '<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>'
+};
+const REP = {none: "Doesn't repeat", daily: "Every day", weekdays: "Weekdays", weekly: "Every week"};
+
+/* ---------- views ---------- */
+const arrows = id => '<button class="del ' + (confirmKey === "rd" + id ? "ask" : "") + '" data-act="rowdel" data-id="' + id + '" aria-label="' + (confirmKey === "rd" + id ? "Tap again to delete" : "Delete") + '">' + I.trash + '</button><div class="grip" data-grip="' + id + '" aria-label="Drag to reorder">' + I.grip + '</div>';
+function row(c, D) {
+  const comp = c.complete && c.completedOn === D, dn = !!(c.done && c.done[D]) || comp, f = folderOf(c);
+  const carried = !dn && c.repeat === "none" && c.date && c.date < D;
+  const m = [];
+  if (f) m.push('<span style="color:' + esc(f.color || "#888") + '">' + esc(f.name) + '</span>');
+  if (c.repeat !== "none") { const s = streak(c, D); m.push("<span>↻ " + REP[c.repeat].toLowerCase() + (s ? " · " + s + " day streak" : "") + "</span>"); }
+  if (carried) m.push('<span class="tag">carried from ' + nice(c.date) + '</span>');
+  if (c.notes) m.push("<span>≡ notes</span>");
+  const sc = subCount(c, D); if (sc) m.push('<span class="ck">' + ringHtml(c, D, c.id + D, 16) + sc + "</span>");
+  return '<div class="row ' + (dn ? "dn" : "") + '" data-rid="' + c.id + '"><button class="chk ' + (dn ? "on" : "") + '" data-act="day" data-id="' + c.id + '" data-d="' + D + '" aria-label="Done for today"></button>' +
+    '<div class="main" data-act="open" data-id="' + c.id + '" data-d="' + D + '"><div class="t">' + esc(c.title) + '</div>' + (m.length ? '<div class="m">' + m.join("") + '</div>' : "")+ '</div>' +
+    (reorder ? arrows(c.id) : '<button class="fin ' + (comp ? "on" : "") + '" data-act="fin" data-id="' + c.id + '" data-d="' + D + '" aria-label="Finished completely">' + I.dbl + '</button>') + '</div>';
+}
+function dayList(D, addPlaceholder) {
+  const cards = S.cards.filter(c => onDay(c, D));
+  const todo = cards.filter(c => c.repeat === "none" && !(c.done && c.done[D]));
+  const routine = cards.filter(c => c.repeat !== "none" && !(c.done && c.done[D]));
+  const done = cards.filter(c => c.done && c.done[D]);
+  let h = "";
+  if (todo.length) h += '<div class="sec">To do</div><div class="grp">' + todo.map(c => row(c, D)).join("") + '</div>';
+  if (routine.length) h += '<div class="sec">Routine</div><div class="grp">' + routine.map(c => row(c, D)).join("") + '</div>';
+  if (done.length) h += '<div class="sec">Done · ' + done.length + '</div>' + '<div class="grp">' + done.map(c => row(c, D)).join("") + '</div>';
+  if (!cards.length) h += '<div class="empty">Nothing planned.<br>Add a task or pull one in from a project.</div>';
+  h += '<div class="add"><input id="addin" data-enter="add" data-d="' + D + '" placeholder="' + esc(addPlaceholder) + '" enterkeyhint="done"><button class="pill on" data-act="pickopen" data-d="' + D + '">+ Project</button></div>';
+  return h;
+}
+function viewToday() {
+  const D = todayStr(), cards = S.cards.filter(c => onDay(c, D));
+  const left = cards.filter(c => !(c.done && c.done[D])).length;
+  const d = new Date();
+  return head(DAYS[d.getDay()], MONTHS[d.getMonth()] + " " + d.getDate() + " · " + (left ? left + " left" : cards.length ? "all done" : "clear"), true) + '<main>' + dayList(D, "Add a task for today…") + '</main>';
+}
+function viewFolders() {
+  if (openFolder !== null) return viewFolder();
+  const un = S.cards.filter(c => !c.folder && !c.complete).length;
+  let h = head("Projects", S.folders.length + " folders", true) + '<main>';
+  h += S.folders.map(f => '<div class="frow" data-act="folder" data-id="' + f.id + '"><span class="dot" style="background:' + esc(f.color) + '"></span><span class="n">' + esc(f.name) + '</span><span class="c">' + S.cards.filter(c => c.folder === f.id && !c.complete).length + '</span></div>').join("");
+  h += '<div class="frow" data-act="folder" data-id="_none"><span class="dot" style="background:#444"></span><span class="n">Unsorted</span><span class="c">' + un + '</span></div>';
+  h += '<div class="add"><input id="fadd" data-enter="addfolder" placeholder="New folder…" enterkeyhint="done"></div></main>';
+  return h;
+}
+const COLORS = ["#9caf88", "#d4b483", "#6f9fd0", "#c98aa8", "#b09ad6", "#d97c6a", "#8ac6c1"];
+function viewFolder() {
+  const none = openFolder === "_none", f = none ? {id: null, name: "Unsorted", color: "#444"} : S.folders.find(x => x.id === openFolder);
+  if (!f) { openFolder = null; return viewFolders(); }
+  const all = S.cards.filter(c => (c.folder || null) === f.id), act = all.filter(c => !c.complete), fin = all.filter(c => c.complete), T = todayStr();
+  let h = '<header><div><button class="back" data-act="up">‹ Projects</button><h1>' + esc(f.name) + '</h1><div class="sub">' + act.length + ' open</div></div><div class="hb"><button class="ib ' + (reorder ? "on" : "") + '" data-act="reorder" aria-label="Edit list">' + I.sort + '</button>' + (none ? "" : '<button class="ib" data-act="folderedit" data-id="' + f.id + '">' + I.gear + '</button>') + '</div></header><main>';
+  h += '<div class="grp">' + act.map(c => {
+    const sched = c.repeat !== "none" ? '<span class="pill on" data-act="open" data-id="' + c.id + '" data-d="' + T + '">↻</span>' : '<button class="pill ' + (c.date === T ? "on" : "") + '" data-act="totoday" data-id="' + c.id + '">' + (c.date === T ? "Today ✓" : "+ Today") + '</button>';
+    const sub = c.repeat !== "none" ? REP[c.repeat].toLowerCase() : c.date ? nice(c.date) : "not scheduled";
+    return '<div class="row" data-rid="' + c.id + '"><div class="main" data-act="open" data-id="' + c.id + '" data-d="' + T + '"><div class="t">' + esc(c.title) + '</div><div class="m"><span>' + sub + '</span>' + (c.notes ? "<span>≡ notes</span>" : "") + (subCount(c, T) ? '<span class="ck">' + ringHtml(c, T, c.id + T, 16) + subCount(c, T) + "</span>" : "") + '</div></div>' + (reorder ? arrows(c.id) : sched) + '</div>';
+  }).join("") + '</div>';
+  if (!act.length) h += '<div class="empty">No open tasks here.</div>';
+  h += '<div class="add"><input id="addin" data-enter="addinfolder" placeholder="Add a card…" enterkeyhint="done"></div>';
+  if (fin.length) {
+    h += '<div class="sec" data-act="togfin">Finished · ' + fin.length + (showFinished ? " ▾" : " ▸") + '</div>';
+    if (showFinished) h += fin.map(c => '<div class="row dn"><div class="main" data-act="open" data-id="' + c.id + '" data-d="' + T + '"><div class="t">' + esc(c.title) + '</div><div class="m">finished ' + nice(c.completedOn) + '</div></div></div>').join("");
+  }
+  return h + "</main>";
+}
+function viewCal() {
+  const y = calMonth.getFullYear(), mo = calMonth.getMonth(), T = todayStr();
+  const start = new Date(y, mo, 1 - new Date(y, mo, 1).getDay());
+  let g = ["S","M","T","W","T","F","S"].map(x => '<div class="dw">' + x + '</div>').join("");
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i), k = ymd(d);
+    const cs = S.cards.filter(c => onDay(c, k)), dots = cs.slice(0, 4).map(c => '<i class="' + (c.done && c.done[k] ? "k" : "") + '"></i>').join("");
+    g += '<button class="cell ' + (d.getMonth() !== mo ? "o " : "") + (k === calSel ? "sel " : "") + (k === T ? "td" : "") + '" data-act="sel" data-d="' + k + '"><span class="d">' + d.getDate() + '</span><span class="dots">' + dots + '</span></button>';
+  }
+  return head("Calendar", "", true) + '<main><div class="cal-h"><button class="ib" data-act="mprev">' + I.prev + '</button><b>' + MONTHS[mo] + " " + y + '</b><button class="ib" data-act="mnext">' + I.next + '</button></div><div class="grid">' + g + '</div><div class="sec">' + (calSel === T ? "Today" : nice(calSel)) + '</div>' + dayList(calSel, "Add a task for " + nice(calSel) + "…") + '</main>';
+}
+function head(title, sub, tools) {
+  return '<header><div><h1>' + esc(title) + '</h1>' + (sub ? '<div class="sub">' + esc(sub) + '</div>' : "") + '</div>' + (tools ? '<div class="hb"><button class="ib ' + (reorder ? "on" : "") + '" data-act="reorder" aria-label="Edit list">' + I.sort + '</button><button class="ib" data-act="ambient" aria-label="Dim mode">' + I.moon + '</button><button class="ib" data-act="settings" aria-label="Settings">' + I.gear + '</button></div>' : "") + '</header>';
+}
+function nav() {
+  const t = (id, label, ic) => '<button class="' + (tab === id ? "on" : "") + '" data-act="tab" data-id="' + id + '">' + I[ic] + label + '</button>';
+  return '<nav>' + t("today", "Today", "today") + t("folders", "Projects", "folders") + t("cal", "Calendar", "cal") + '</nav>';
+}
+function render() {
+  const keep = document.activeElement && document.activeElement.id === "addin" ? document.activeElement.value : null;
+  const v = tab === "today" ? viewToday() : tab === "folders" ? viewFolders() : viewCal();
+  const sc = document.querySelector("main"), top = sc ? sc.scrollTop : 0;
+  document.getElementById("app").innerHTML = v + nav();
+  const m = document.querySelector("main"); if (m) m.scrollTop = top;
+  settleRings();
+}
+
+/* ---------- modals ---------- */
+const MD = document.getElementById("modal");
+let onClose = null;
+function showModal(html, cb) {
+  MD.innerHTML = '<div class="sheet-bg" data-act="bg"><div class="sheet" data-act="none">' + html + '</div></div>'; onClose = cb || null;
+}
+function closeModal() { MD.innerHTML = ""; const cb = onClose; onClose = null; if (cb) cb(); render(); }
+function cardModal(id, D) {
+  const c = byId(id); if (!c) return;
+  const comp = c.complete && c.completedOn === D, dn = !!(c.done && c.done[D]) || comp;
+  const fopts = '<option value="">Unsorted</option>' + S.folders.map(f => '<option value="' + f.id + '"' + (c.folder === f.id ? " selected" : "") + '>' + esc(f.name) + '</option>').join("");
+  const ropts = Object.keys(REP).map(k => '<option value="' + k + '"' + (c.repeat === k ? " selected" : "") + '>' + REP[k] + '</option>').join("");
+  const s = c.repeat !== "none" ? streak(c, D) : 0;
+  showModal(
+    '<input class="titlein" id="m_title" value="' + esc(c.title) + '" placeholder="Title">' +
+    '<textarea class="notes" id="m_notes" placeholder="Notes…">' + esc(c.notes) + '</textarea><div id="m_barwrap"></div><div class="sub" id="m_sub"></div>' +
+    '<div class="two"><button class="big ' + (dn ? "on" : "") + '" id="b_day" data-act="m_day">' + (dn ? "✓ " : "") + 'Done for today</button><button class="big a ' + (comp ? "on" : "") + '" id="b_fin" data-act="m_fin">' + (comp ? "✓ " : "") + 'Finished completely</button></div>' +
+    (s ? '<div class="small">↻ ' + s + ' day streak</div>' : "") +
+    '<div class="lab">Project</div><select class="fld" id="m_folder">' + fopts + '</select>' +
+    '<div class="lab">Scheduled / starts</div><input type="date" class="fld" id="m_date" value="' + (c.date || "") + '">' +
+    '<div class="lab">Repeat</div><select class="fld" id="m_rep">' + ropts + '</select>' +
+    '<div class="sw ' + (c.carry ? "on" : "") + '" id="m_carry" data-act="m_carry"><span>Carry over if not finished</span><i></i></div>' +
+    '<button class="danger" data-act="m_del">' + (confirmKey === "del" + c.id ? "Tap again to delete" : "Delete card") + '</button>',
+    null);
+  const sheet = MD.querySelector(".sheet");
+  const ta = document.getElementById("m_notes"); const grow = () => { ta.style.height = "auto"; ta.style.height = Math.max(120, ta.scrollHeight) + "px"; }; grow();
+  ta.addEventListener("input", () => { c.notes = ta.value; save(); grow(); });
+  document.getElementById("m_title").addEventListener("input", e => { c.title = e.target.value; save(); });
+  document.getElementById("m_folder").addEventListener("change", e => { c.folder = e.target.value || null; save(); });
+  document.getElementById("m_date").addEventListener("change", e => { c.date = e.target.value || null; if (c.repeat !== "none" && !c.date) c.date = todayStr(); save(); });
+  document.getElementById("m_rep").addEventListener("change", e => { c.repeat = e.target.value; if (c.repeat !== "none" && !c.date) c.date = todayStr(); save(); cardModal(id, D); });
+  sheet.dataset.id = id; sheet.dataset.d = D;
+  subRender(c, D);
+}
+function subRender(c, D, focusNew) {
+  const box = document.getElementById("m_sub"); if (!box) return;
+  const bw = document.getElementById("m_barwrap"), l = c.sub || [];
+  if (!l.length) bw.innerHTML = "";
+  else { bw.innerHTML = ringHtml(c, D, "m" + c.id, 22) + "<span>" + subCount(c, D) + " done</span>"; settleRings(); }
+  box.innerHTML = (c.sub || []).map(it => '<div class="si ' + (subDone(it, c, D) ? "dn" : "") + '"><button class="sc ' + (subDone(it, c, D) ? "on" : "") + '" data-act="sub_t" data-sid="' + it.id + '" aria-label="Check"></button><input value="' + esc(it.t) + '" data-sid="' + it.id + '" enterkeyhint="next"><button class="sx" data-act="sub_x" data-sid="' + it.id + '" aria-label="Remove">×</button></div>').join("") +
+    '<input class="addsub" id="m_addsub" data-enter="addsub" placeholder="+ Add checklist item" enterkeyhint="done">';
+  if (focusNew) document.getElementById("m_addsub").focus();
+}
+function pickModal(D) {
+  const cands = S.cards.filter(c => !c.complete && c.repeat === "none" && c.date !== D);
+  let h = '<h2>Pull into ' + (D === todayStr() ? "today" : nice(D)) + '</h2>';
+  const groups = S.folders.concat([{id: null, name: "Unsorted", color: "#444"}]);
+  groups.forEach(f => {
+    const cs = cands.filter(c => (c.folder || null) === f.id); if (!cs.length) return;
+    h += '<div class="lab" style="color:' + esc(f.color) + '">' + esc(f.name) + '</div>' + cs.map(c => '<div class="row" data-act="pick" data-id="' + c.id + '" data-d="' + D + '"><div class="main"><div class="t">' + esc(c.title) + '</div><div class="m">' + (c.date ? nice(c.date) : "not scheduled") + '</div></div><span class="pill">add</span></div>').join("");
+  });
+  if (!cands.length) h += '<div class="empty">No open project cards to pull in.<br>Add cards in Projects first.</div>';
+  showModal(h);
+}
+function folderModal(id) {
+  const f = S.folders.find(x => x.id === id); if (!f) return;
+  showModal('<h2>Folder</h2><input class="fld" id="f_name" value="' + esc(f.name) + '"><div class="lab">Color</div><div style="display:flex;gap:12px;flex-wrap:wrap">' + COLORS.map(c => '<button data-act="fcolor" data-id="' + id + '" data-c="' + c + '" style="width:38px;height:38px;border-radius:19px;background:' + c + ';' + (f.color === c ? "outline:2px solid #fff;outline-offset:2px" : "") + '"></button>').join("") + '</div><button class="danger" data-act="fdel" data-id="' + id + '">' + (confirmKey === "fd" + id ? "Tap again: delete folder (cards move to Unsorted)" : "Delete folder") + '</button>');
+  document.getElementById("f_name").addEventListener("input", e => { f.name = e.target.value || "Untitled"; save(); });
+}
+let wakeLock = null, wakeMsg = "";
+function settingsModal(msg) {
+  showModal('<h2>Settings</h2>' +
+    '<div class="sw ' + (S.settings.wake ? "on" : "") + '" data-act="s_wake"><span>Keep screen awake</span><i></i></div>' +
+    '<div class="small">' + esc(wakeMsg) + '</div>' +
+    '<div class="lab">Color</div><div style="display:flex;gap:12px;flex-wrap:wrap">' + THEMES.map(t => '<button data-act="theme" data-id="' + t.id + '" aria-label="' + t.name + '" style="width:40px;height:40px;border-radius:20px;background:' + t.acc + ';' + (S.settings.theme === t.id ? "outline:2px solid #fff;outline-offset:3px" : "") + '"></button>').join("") + '</div><div class="small">' + esc((THEMES.find(x => x.id === S.settings.theme) || THEMES[0]).name) + '</div>' +
+    '<div class="lab">Font</div><div style="display:flex;gap:8px;flex-wrap:wrap">' + FONTS.map(f => '<button class="pill ' + (S.settings.font === f.id ? "on" : "") + '" data-act="font" data-id="' + f.id + '" style="font-family:' + f.css.replace(/"/g, "&quot;") + '">' + f.name + '</button>').join("") + '</div>' +
+    '<div class="lab">Dim to clock after idle</div><select class="fld" id="s_amb">' + [[0, "Never"], [1, "1 minute"], [2, "2 minutes"], [5, "5 minutes"], [10, "10 minutes"]].map(a => '<option value="' + a[0] + '"' + (S.settings.ambientMin === a[0] ? " selected" : "") + '>' + a[1] + '</option>').join("") + '</select>' +
+    '<div class="lab">Backup</div><textarea class="notes" id="s_data" style="min-height:90px;font-size:12px" placeholder="Export fills this box. Paste a backup here to import."></textarea>' +
+    '<div class="two"><button class="big" data-act="s_export">Export</button><button class="big" data-act="s_copy">Copy</button><button class="big" data-act="s_import">Import</button></div><div class="small" id="s_msg">' + esc(msg || "") + '</div>');
+  document.getElementById("s_amb").addEventListener("change", e => { S.settings.ambientMin = +e.target.value; save(); bump(); });
+}
+
+/* ---------- actions ---------- */
+function act(a, t, ev) {
+  const id = t.dataset.id, D = t.dataset.d;
+  switch (a) {
+    case "rowdel": {
+      if (confirmKey === "rd" + id) { S.cards = S.cards.filter(c => c.id !== id); confirmKey = null; save(); render(); }
+      else { confirmKey = "rd" + id; render(); setTimeout(() => { if (confirmKey === "rd" + id) { confirmKey = null; render(); } }, 3000); }
+      break;
+    }
+    case "reorder": confirmKey = null; reorder = !reorder; render(); break;
+    case "tab": reorder = false; tab = id; openFolder = null; render(); break;
+    case "day": toggleDay(byId(id), D); render(); break;
+    case "fin": toggleFin(byId(id), D); render(); break;
+    case "open": cardModal(id, D); break;
+    case "sel": calSel = D; if (parse(D).getMonth() !== calMonth.getMonth()) calMonth = new Date(parse(D).getFullYear(), parse(D).getMonth(), 1); render(); break;
+    case "mprev": calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1); render(); break;
+    case "mnext": calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1); render(); break;
+    case "folder": openFolder = id; showFinished = false; render(); break;
+    case "up": openFolder = null; render(); break;
+    case "folderedit": folderModal(id); break;
+    case "fcolor": { const f = S.folders.find(x => x.id === id); f.color = t.dataset.c; save(); folderModal(id); break; }
+    case "fdel": if (confirmKey === "fd" + id) { S.cards.forEach(c => { if (c.folder === id) c.folder = null; }); S.folders = S.folders.filter(f => f.id !== id); openFolder = null; confirmKey = null; save(); closeModal(); } else { confirmKey = "fd" + id; folderModal(id); } break;
+    case "togfin": showFinished = !showFinished; render(); break;
+    case "totoday": { const c = byId(id), T = todayStr(); c.date = c.date === T ? null : T; save(); render(); break; }
+    case "pickopen": pickModal(D); break;
+    case "pick": { const c = byId(id); c.date = D; save(); pickModal(D); render(); break; }
+    case "bg": if (ev.target === t) closeModal(); break;
+    case "sub_t": { const s = t.closest(".sheet"), c = byId(s.dataset.id), it = c.sub.find(x => x.id === t.dataset.sid), k = subKey(c, s.dataset.d); it.d = it.d || {}; if (it.d[k]) delete it.d[k]; else it.d[k] = 1; save(); subRender(c, s.dataset.d); break; }
+    case "sub_x": { const s = t.closest(".sheet"), c = byId(s.dataset.id); c.sub = c.sub.filter(x => x.id !== t.dataset.sid); save(); subRender(c, s.dataset.d); break; }
+    case "m_day": { const s = t.closest(".sheet"); toggleDay(byId(s.dataset.id), s.dataset.d); cardModal(s.dataset.id, s.dataset.d); break; }
+    case "m_fin": { const s = t.closest(".sheet"); toggleFin(byId(s.dataset.id), s.dataset.d); cardModal(s.dataset.id, s.dataset.d); break; }
+    case "m_carry": { const s = t.closest(".sheet"), c = byId(s.dataset.id); c.carry = !c.carry; save(); t.classList.toggle("on", c.carry); break; }
+    case "m_del": { const s = t.closest(".sheet"), cid = s.dataset.id; if (confirmKey === "del" + cid) { S.cards = S.cards.filter(c => c.id !== cid); confirmKey = null; save(); closeModal(); } else { confirmKey = "del" + cid; t.textContent = "Tap again to delete"; } break; }
+    case "settings": settingsModal(); break;
+    case "theme": S.settings.theme = id; save(); applyLook(); settingsModal(); break;
+    case "font": S.settings.font = id; save(); applyLook(); settingsModal(); break;
+    case "s_wake": S.settings.wake = !S.settings.wake; save(); t.classList.toggle("on", S.settings.wake); S.settings.wake ? requestWake() : releaseWake(); break;
+    case "s_export": document.getElementById("s_data").value = JSON.stringify(S); document.getElementById("s_msg").textContent = "Exported below. Copy it somewhere safe."; break;
+    case "s_copy": { const ta = document.getElementById("s_data"); if (!ta.value) ta.value = JSON.stringify(S); try { navigator.clipboard.writeText(ta.value).then(() => document.getElementById("s_msg").textContent = "Copied.", () => { ta.select(); document.getElementById("s_msg").textContent = "Select and copy manually."; }); } catch (e) { ta.select(); } break; }
+    case "s_import": { try { const o = JSON.parse(document.getElementById("s_data").value); if (!o.cards || !o.folders) throw 0; S = o; S.settings = Object.assign({wake: true, ambientMin: 2, theme: "sage", font: "system"}, S.settings || {}); save(); settingsModal("Imported " + S.cards.length + " cards."); } catch (e) { document.getElementById("s_msg").textContent = "That doesn't look like a valid backup."; } break; }
+    case "ambient": showAmbient(); break;
+  }
+}
+function enter(a, t) {
+  const v = t.value.trim(); if (!v) return;
+  if (a === "add") { newCard(v, {date: t.dataset.d}); t.value = ""; render(); const i = document.getElementById("addin"); if (i) i.focus(); }
+  if (a === "addinfolder") { newCard(v, {folder: openFolder === "_none" ? null : openFolder}); render(); const i = document.getElementById("addin"); if (i) i.focus(); }
+  if (a === "addsub") { const s = t.closest(".sheet"), c = byId(s.dataset.id); c.sub = c.sub || []; c.sub.push({id: uid("s_"), t: v, d: {}}); save(); subRender(c, s.dataset.d, true); return; }
+  if (a === "addfolder") { S.folders.push({id: uid("f_"), name: v, color: COLORS[S.folders.length % COLORS.length]}); save(); render(); }
+}
+document.addEventListener("click", ev => {
+  let t = ev.target.closest("[data-act]"); if (!t) return;
+  if (t.dataset.act === "none") return;
+  // inner buttons win over the sheet wrapper
+  act(t.dataset.act, t, ev);
+});
+document.addEventListener("input", ev => { const t = ev.target; if (t.dataset && t.dataset.sid && t.tagName === "INPUT") { const s = t.closest(".sheet"), c = byId(s.dataset.id), it = c.sub.find(x => x.id === t.dataset.sid); if (it) { it.t = t.value; save(); } } });
+document.addEventListener("keydown", ev => { if (ev.key === "Enter" && ev.target.dataset && ev.target.dataset.enter) { ev.preventDefault(); enter(ev.target.dataset.enter, ev.target); } });
+
+/* ---------- drag to reorder ---------- */
+document.addEventListener("pointerdown", ev => {
+  const g = ev.target.closest && ev.target.closest(".grip"); if (!g) return;
+  ev.preventDefault();
+  const row = g.closest(".row"), grp = row.parentElement, items = [...grp.children].filter(x => x.dataset.rid);
+  const idx = items.indexOf(row), rects = items.map(x => x.getBoundingClientRect()), y0 = ev.clientY, step = rects[idx].height + 8;
+  let target = idx;
+  row.classList.add("drag");
+  try { g.setPointerCapture(ev.pointerId); } catch (e) {}
+  const move = e => {
+    const dy = e.clientY - y0; row.style.transform = "translateY(" + dy + "px)";
+    const c = rects[idx].top + rects[idx].height / 2 + dy;
+    target = 0; items.forEach((x, j) => { if (j !== idx && rects[j].top + rects[j].height / 2 < c) target++; });
+    items.forEach((x, j) => { if (j === idx) return; x.style.transform = (j < idx && j >= target) ? "translateY(" + step + "px)" : (j > idx && j < target + 1 && j <= target) ? "translateY(" + (-step) + "px)" : ""; });
+  };
+  const end = e => {
+    g.removeEventListener("pointermove", move); g.removeEventListener("pointerup", end); g.removeEventListener("pointercancel", end);
+    items.forEach(x => { x.style.transform = ""; x.classList.remove("drag"); });
+    if (target !== idx && e.type !== "pointercancel") {
+      const ids = items.map(x => x.dataset.rid), moved = ids.splice(idx, 1)[0]; ids.splice(target, 0, moved);
+      const slots = items.map(x => S.cards.findIndex(c => c.id === x.dataset.rid)).sort((a, b) => a - b);
+      const cs = ids.map(id => byId(id)); cs.forEach((c, k) => { S.cards[slots[k]] = c; });
+      save();
+    }
+    render();
+  };
+  g.addEventListener("pointermove", move); g.addEventListener("pointerup", end); g.addEventListener("pointercancel", end);
+});
+
+/* ---------- ambient (dim) mode ---------- */
+const AMB = document.getElementById("amb"), AIN = document.getElementById("ambin");
+let idleT = null, ambOn = false, ambTick = null;
+function ambRender() {
+  const d = new Date(), D = todayStr();
+  const cards = S.cards.filter(c => onDay(c, D)), isDone = c => !!(c.done && c.done[D]), nd = cards.filter(isDone).length, f = cards.length ? nd / cards.length : 0;
+  let h = d.getHours() % 12 || 12; const clk = h + ":" + pad(d.getMinutes());
+  AIN.innerHTML = '<div class="clk">' + clk + '</div><div class="dt">' + DAYS[d.getDay()] + ", " + MONTHS[d.getMonth()] + " " + d.getDate() + '</div>' +
+    (cards.length ? '<div class="abar"><i style="width:' + Math.round(f * 100) + '%"></i></div>' : "") +
+    cards.slice(0, 8).map(c => '<div class="it' + (isDone(c) ? " dn" : "") + '">' + '<span class="dd">' + (isDone(c) ? "●" : "○") + "</span> " + esc(c.title) + '</div>').join("") +
+    (cards.length > 8 ? '<div class="ct">+' + (cards.length - 8) + ' more</div>' : "") +
+    "";
+  const dx = ((d.getMinutes() * 7) % 21) - 10, dy = ((d.getMinutes() * 13) % 21) - 10; // tiny drift to avoid OLED burn-in
+  AIN.style.transform = "translate(" + dx + "px," + dy + "px)";
+}
+function showAmbient() { ambOn = true; AMB.classList.add("show"); ambRender(); clearInterval(ambTick); ambTick = setInterval(ambRender, 20000); }
+function hideAmbient() { ambOn = false; AMB.classList.remove("show"); clearInterval(ambTick); render(); }
+AMB.addEventListener("click", () => { hideAmbient(); bump(); });
+function bump() {
+  clearTimeout(idleT);
+  const m = S.settings.ambientMin;
+  if (m > 0) idleT = setTimeout(() => { if (!ambOn) { MD.innerHTML = ""; showAmbient(); } }, m * 60000);
+}
+["pointerdown", "keydown", "touchstart", "scroll"].forEach(e => document.addEventListener(e, () => { if (!ambOn) bump(); }, {passive: true, capture: true}));
+
+/* ---------- wake lock ---------- */
+async function requestWake() {
+  if (!S.settings.wake) return;
+  try {
+    if (!("wakeLock" in navigator)) { wakeMsg = "Wake Lock isn't available in this view. Open the app from the Home Screen."; return; }
+    wakeLock = await navigator.wakeLock.request("screen"); wakeMsg = "Screen will stay on while the app is open.";
+    wakeLock.addEventListener("release", () => { wakeLock = null; });
+  } catch (e) { wakeMsg = "Couldn't hold the screen awake here (" + (e && e.name || "blocked") + "). Try from the Home Screen."; }
+}
+function releaseWake() { try { if (wakeLock) wakeLock.release(); } catch (e) {} wakeLock = null; wakeMsg = "Screen can sleep normally."; }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { if (S.settings.wake && !wakeLock) requestWake(); checkDay(); } });
+document.addEventListener("pointerdown", () => { if (S.settings.wake && !wakeLock) requestWake(); }, {once: true});
+
+/* ---------- midnight rollover ---------- */
+function checkDay() { const t = todayStr(); if (t !== lastDay) { lastDay = t; calSel = t; calMonth = new Date(parse(t).getFullYear(), parse(t).getMonth(), 1); if (!MD.innerHTML) render(); if (ambOn) ambRender(); } }
+setInterval(checkDay, 20000);
+
+applyLook(); render(); requestWake(); bump();
+</script>
+</body>
+</html>
