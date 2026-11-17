@@ -408,11 +408,21 @@ function folderModal(id) {
   document.getElementById("f_name").addEventListener("input", e => { f.name = e.target.value || "Untitled"; save(); });
 }
 let wakeLock = null, wakeMsg = "";
+// iOS home-screen apps can report a page ~62pt shorter than the screen, leaving a dead strip at the bottom. Stretch #app to the real screen height.
+let fitNote = "";
+function fitScreen() {
+  const el = document.getElementById("app"); if (!el) return;
+  const sa = navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
+  const full = Math.max(screen.width, screen.height), portrait = innerHeight > innerWidth;
+  if (sa && portrait && innerHeight < full - 20) { el.style.height = full + "px"; fitNote = ", stretched to " + full; }
+  else { el.style.height = ""; fitNote = ""; }
+}
+addEventListener("resize", fitScreen); addEventListener("orientationchange", () => setTimeout(fitScreen, 200));
 function diag() {
   const el = document.getElementById("s_diag"); if (!el) return;
   const pr = document.createElement("div"); pr.style.cssText = "position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)"; document.body.appendChild(pr);
   const cs = getComputedStyle(pr), t = cs.paddingTop, b = cs.paddingBottom; pr.remove();
-  el.textContent = "Display: " + innerWidth + "×" + innerHeight + " (screen " + screen.width + "×" + screen.height + "), safe top " + t + " bottom " + b + (navigator.standalone ? ", app mode" : ", browser mode");
+  el.textContent = "Display: " + innerWidth + "×" + innerHeight + " (screen " + screen.width + "×" + screen.height + "), safe top " + t + " bottom " + b + (navigator.standalone ? ", app mode" : ", browser mode") + fitNote;
 }
 function settingsModal(msg) {
   showModal('<h2>Settings</h2>' +
@@ -558,7 +568,7 @@ document.addEventListener("pointerdown", () => { if (S.settings.wake && !wakeLoc
 function checkDay() { const t = todayStr(); if (t !== lastDay) { lastDay = t; calSel = t; calMonth = new Date(parse(t).getFullYear(), parse(t).getMonth(), 1); if (!MD.innerHTML) render(); if (ambOn) ambRender(); } }
 setInterval(checkDay, 20000);
 
-applyLook(); render(); requestWake(); bump();
+fitScreen(); applyLook(); render(); requestWake(); bump();
 if ("serviceWorker" in navigator && /^https?:/.test(location.protocol)) addEventListener("load", () => { try { navigator.serviceWorker.register("sw.js").catch(() => {}); } catch (e) {} });
 </script>
 </body>
