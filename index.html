@@ -9,6 +9,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="SLATE">
 <meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
 <style>
 :root{--bg:#000;--card:#0c0c0c;--card2:#141414;--line:#1d1d1d;--fg:#dcdcdc;--dim:#6f6f6f;--acc:#9caf88;--acc2:#c4d3b3;--danger:#c9604f}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -547,6 +549,7 @@ function checkDay() { const t = todayStr(); if (t !== lastDay) { lastDay = t; ca
 setInterval(checkDay, 20000);
 
 applyLook(); render(); requestWake(); bump();
+if ("serviceWorker" in navigator && /^https?:/.test(location.protocol)) addEventListener("load", () => { try { navigator.serviceWorker.register("sw.js").catch(() => {}); } catch (e) {} });
 </script>
 </body>
 </html>
