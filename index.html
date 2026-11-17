@@ -408,22 +408,24 @@ function folderModal(id) {
   document.getElementById("f_name").addEventListener("input", e => { f.name = e.target.value || "Untitled"; save(); });
 }
 let wakeLock = null, wakeMsg = "";
-// iOS home-screen apps can report a page ~62pt shorter than the screen, leaving a dead strip at the bottom. Stretch #app to the real screen height.
+// Layout test modes: iOS home-screen apps sometimes get a page shorter than the screen. "std" = normal.
 let fitNote = "";
 function fitScreen() {
   const el = document.getElementById("app"); if (!el) return;
-  const sa = navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
-  const full = Math.max(screen.width, screen.height), portrait = innerHeight > innerWidth;
-  // Always stretch in home-screen mode: innerHeight changes after launch on iOS, so it can't be trusted as a trigger.
-  if (sa && portrait) { el.style.height = full + "px"; fitNote = ", stretched to " + full; }
-  else if (!sa) { el.style.height = ""; fitNote = ""; }
+  const m = S.settings.layout || "std"; let h = "";
+  if (m === "screen") h = Math.max(screen.width, screen.height) + "px";
+  else if (m === "vh") h = "100vh"; else if (m === "lvh") h = "100lvh"; else if (m === "dvh") h = "100dvh";
+  else if (m === "visual" && window.visualViewport) h = Math.round(visualViewport.height) + "px";
+  el.style.height = h; fitNote = m === "std" ? "" : " · layout " + m + " = " + h;
 }
-addEventListener("resize", fitScreen); addEventListener("pageshow", fitScreen); document.addEventListener("visibilitychange", fitScreen); [300, 1000, 2500].forEach(t => setTimeout(fitScreen, t)); addEventListener("orientationchange", () => setTimeout(fitScreen, 200));
+addEventListener("resize", fitScreen); addEventListener("orientationchange", () => setTimeout(fitScreen, 200));
+if (window.visualViewport) visualViewport.addEventListener("resize", fitScreen);
 function diag() {
   const el = document.getElementById("s_diag"); if (!el) return;
-  const pr = document.createElement("div"); pr.style.cssText = "position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)"; document.body.appendChild(pr);
-  const cs = getComputedStyle(pr), t = cs.paddingTop, b = cs.paddingBottom; pr.remove();
-  el.textContent = "Display: " + innerWidth + "×" + innerHeight + " (screen " + screen.width + "×" + screen.height + "), safe top " + t + " bottom " + b + (navigator.standalone ? ", app mode" : ", browser mode") + fitNote;
+  const probe = css => { const d = document.createElement("div"); d.style.cssText = "position:fixed;visibility:hidden;width:1px;" + css; document.body.appendChild(d); const r = d.offsetHeight, cs = getComputedStyle(d); const out = [r, cs.paddingTop, cs.paddingBottom]; d.remove(); return out; };
+  const vh = probe("height:100vh")[0], lvh = probe("height:100lvh")[0], svh = probe("height:100svh")[0], dvh = probe("height:100dvh")[0], sa = probe("height:1px;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)");
+  const vv = window.visualViewport ? Math.round(visualViewport.height) : "n/a";
+  el.textContent = "inner " + innerWidth + "×" + innerHeight + " · outer " + outerWidth + "×" + outerHeight + " · screen " + screen.width + "×" + screen.height + " · visual " + vv + " · client " + document.documentElement.clientHeight + " · vh " + vh + " lvh " + lvh + " svh " + svh + " dvh " + dvh + " · safe top " + sa[1] + " bottom " + sa[2] + (navigator.standalone ? " · app mode" : " · browser mode") + fitNote;
 }
 function settingsModal(msg) {
   showModal('<h2>Settings</h2>' +
@@ -431,6 +433,7 @@ function settingsModal(msg) {
     '<div class="small">' + esc(wakeMsg) + '</div>' +
     '<div class="lab">Color</div><div style="display:flex;gap:12px;flex-wrap:wrap">' + THEMES.map(t => '<button data-act="theme" data-id="' + t.id + '" aria-label="' + t.name + '" style="width:40px;height:40px;border-radius:20px;background:' + t.acc + ';' + (S.settings.theme === t.id ? "outline:2px solid #fff;outline-offset:3px" : "") + '"></button>').join("") + '</div><div class="small">' + esc((THEMES.find(x => x.id === S.settings.theme) || THEMES[0]).name) + '</div>' +
     '<div class="lab">Font</div><div style="display:flex;gap:8px;flex-wrap:wrap">' + FONTS.map(f => '<button class="pill ' + (S.settings.font === f.id ? "on" : "") + '" data-act="font" data-id="' + f.id + '" style="font-family:' + f.css.replace(/"/g, "&quot;") + '">' + f.name + '</button>').join("") + '</div>' +
+    '<div class="lab">Layout (try if the bottom looks wrong)</div><div style="display:flex;gap:8px;flex-wrap:wrap">' + [["std", "Standard"], ["screen", "Screen"], ["vh", "vh"], ["lvh", "lvh"], ["dvh", "dvh"], ["visual", "Visual"]].map(m => '<button class="pill ' + ((S.settings.layout || "std") === m[0] ? "on" : "") + '" data-act="layout" data-id="' + m[0] + '">' + m[1] + '</button>').join("") + '</div>' +
     '<div class="lab">Dim to clock after idle</div><select class="fld" id="s_amb">' + [[0, "Never"], [1, "1 minute"], [2, "2 minutes"], [5, "5 minutes"], [10, "10 minutes"]].map(a => '<option value="' + a[0] + '"' + (S.settings.ambientMin === a[0] ? " selected" : "") + '>' + a[1] + '</option>').join("") + '</select>' +
     '<div class="lab">Backup</div><textarea class="notes" id="s_data" style="min-height:90px;font-size:12px" placeholder="Export fills this box. Paste a backup here to import."></textarea>' +
     '<div class="two"><button class="big" data-act="s_export">Export</button><button class="big" data-act="s_copy">Copy</button><button class="big" data-act="s_import">Import</button></div><div class="small" id="s_msg">' + esc(msg || "") + '</div><div class="small" id="s_diag" style="margin-top:14px"></div>');
@@ -475,6 +478,7 @@ function act(a, t, ev) {
     case "settings": settingsModal(); break;
     case "theme": S.settings.theme = id; save(); applyLook(); settingsModal(); break;
     case "font": S.settings.font = id; save(); applyLook(); settingsModal(); break;
+    case "layout": S.settings.layout = id; save(); fitScreen(); settingsModal(); break;
     case "s_wake": S.settings.wake = !S.settings.wake; save(); t.classList.toggle("on", S.settings.wake); S.settings.wake ? requestWake() : releaseWake(); break;
     case "s_export": document.getElementById("s_data").value = JSON.stringify(S); document.getElementById("s_msg").textContent = "Exported below. Copy it somewhere safe."; break;
     case "s_copy": { const ta = document.getElementById("s_data"); if (!ta.value) ta.value = JSON.stringify(S); try { navigator.clipboard.writeText(ta.value).then(() => document.getElementById("s_msg").textContent = "Copied.", () => { ta.select(); document.getElementById("s_msg").textContent = "Select and copy manually."; }); } catch (e) { ta.select(); } break; }
@@ -553,17 +557,29 @@ function bump() {
 ["pointerdown", "keydown", "touchstart", "scroll"].forEach(e => document.addEventListener(e, () => { if (!ambOn) bump(); }, {passive: true, capture: true}));
 
 /* ---------- wake lock ---------- */
+const NOSLEEP = "data:video/mp4;base64,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";
+let nsVideo = null, awakeOK = false;
+function startVideoWake() {
+  try {
+    if (!nsVideo) {
+      nsVideo = document.createElement("video"); nsVideo.src = NOSLEEP; nsVideo.muted = true; nsVideo.loop = true; nsVideo.setAttribute("playsinline", ""); nsVideo.setAttribute("muted", "");
+      nsVideo.style.cssText = "position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:.01;pointer-events:none"; document.body.appendChild(nsVideo);
+    }
+    const pr = nsVideo.play();
+    if (pr && pr.then) pr.then(() => { awakeOK = true; wakeMsg = "Screen is being kept on (video method)."; }, () => { awakeOK = false; wakeMsg = "Tap anywhere in the app once to keep the screen on."; });
+  } catch (e) { wakeMsg = "Couldn't keep the screen on automatically. Set Auto-Lock to Never in iOS Settings."; }
+}
 async function requestWake() {
   if (!S.settings.wake) return;
   try {
-    if (!("wakeLock" in navigator)) { wakeMsg = "Wake Lock isn't available in this view. Open the app from the Home Screen."; return; }
-    wakeLock = await navigator.wakeLock.request("screen"); wakeMsg = "Screen will stay on while the app is open.";
-    wakeLock.addEventListener("release", () => { wakeLock = null; });
-  } catch (e) { wakeMsg = "Couldn't hold the screen awake here (" + (e && e.name || "blocked") + "). Try from the Home Screen."; }
+    if (!("wakeLock" in navigator)) throw {name: "unsupported"};
+    wakeLock = await navigator.wakeLock.request("screen"); awakeOK = true; wakeMsg = "Screen will stay on while the app is open.";
+    wakeLock.addEventListener("release", () => { wakeLock = null; awakeOK = false; });
+  } catch (e) { wakeMsg = "System wake lock refused (" + (e && e.name || "blocked") + "), using backup method."; startVideoWake(); }
 }
-function releaseWake() { try { if (wakeLock) wakeLock.release(); } catch (e) {} wakeLock = null; wakeMsg = "Screen can sleep normally."; }
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { if (S.settings.wake && !wakeLock) requestWake(); checkDay(); } });
-document.addEventListener("pointerdown", () => { if (S.settings.wake && !wakeLock) requestWake(); }, {once: true});
+function releaseWake() { try { if (wakeLock) wakeLock.release(); } catch (e) {} wakeLock = null; awakeOK = false; try { if (nsVideo) nsVideo.pause(); } catch (e) {} wakeMsg = "Screen can sleep normally."; }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { if (S.settings.wake && !awakeOK) requestWake(); checkDay(); } });
+document.addEventListener("pointerdown", () => { if (S.settings.wake && !awakeOK) requestWake(); }, {capture: true, passive: true});
 
 /* ---------- midnight rollover ---------- */
 function checkDay() { const t = todayStr(); if (t !== lastDay) { lastDay = t; calSel = t; calMonth = new Date(parse(t).getFullYear(), parse(t).getMonth(), 1); if (!MD.innerHTML) render(); if (ambOn) ambRender(); } }
