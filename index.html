@@ -75,7 +75,7 @@ nav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;st
 .dots i{width:5px;height:5px;border-radius:3px;background:#555}
 .dots i.k{background:var(--acc2)}
 .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:flex-end;z-index:20;padding-top:calc(env(safe-area-inset-top) + 28px)}
-.sheet{width:100%;max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#0e0e0e;border-radius:22px 22px 0 0;padding:0 18px calc(env(safe-area-inset-bottom, 0px) + 18px);border-top:1px solid var(--line)}
+.sheet{width:100%;max-width:640px;margin:0 auto;max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#0e0e0e;border-radius:22px 22px 0 0;padding:0 18px calc(env(safe-area-inset-bottom, 0px) + 18px);border-top:1px solid var(--line)}
 .shead{position:sticky;top:0;z-index:3;display:flex;justify-content:flex-end;padding:12px 0 8px;background:#0e0e0e}
 .donebtn{min-width:84px;height:44px;border-radius:22px;background:var(--acc);color:#000;font-weight:600;font-size:17px;padding:0 22px}
 .sheet h2{margin:0 0 12px;font-size:20px}
@@ -119,6 +119,33 @@ select.fld,input[type=date].fld{appearance:none;-webkit-appearance:none;min-heig
 #amb .abar{height:4px;border-radius:2px;background:#161616;margin:0 0 22px;overflow:hidden;max-width:100%}
 #amb .abar i{display:block;height:100%;border-radius:2px;background:var(--acc);opacity:.45}
 #amb .ct{color:#3c3c3c;font-size:16px;margin-top:14px}
+/* ---------- landscape (phones) ---------- */
+@media (orientation:landscape) and (max-height:520px){
+  #app{display:grid;grid-template-columns:96px 1fr;grid-template-rows:auto 1fr}
+  nav{grid-column:1;grid-row:1/3;flex-direction:column;justify-content:center;border-top:0;border-right:1px solid var(--line);padding:6px 0}
+  nav button{flex:none;padding:12px 0}
+  #app>header{grid-column:2;grid-row:1;padding:8px 18px 4px}
+  #app>header h1{font-size:24px}
+  #app>header .sub{font-size:13px;margin-top:0}
+  #app>main{grid-column:2;grid-row:2;min-height:0;padding:2px 18px 16px}
+  .ib{width:38px;height:38px}
+  .row{min-height:56px;padding:6px 6px 6px 12px;margin-bottom:6px}
+  .sec{margin:12px 8px 6px}
+  .calw{display:flex;gap:20px;align-items:flex-start}
+  .calg{flex:0 0 50%;min-width:0}
+  .calr{flex:1;min-width:0}
+  .cell{aspect-ratio:auto;height:38px;gap:2px}
+  .cal-h{padding-bottom:4px}
+  .sheet-bg{padding-top:calc(env(safe-area-inset-top) + 8px)}
+  .shead{padding:8px 0 6px}
+  #amb .in{flex-direction:row;align-items:center;justify-content:center;gap:48px;padding:calc(env(safe-area-inset-top) + 16px) calc(env(safe-area-inset-right) + 40px) 16px calc(env(safe-area-inset-left) + 40px)}
+  #amb .al{flex:0 0 auto}
+  #amb .ar{flex:1;min-width:0}
+  #amb .clk{font-size:96px}
+  #amb .dt{margin-bottom:12px}
+  #amb .abar{margin-bottom:0}
+  #amb .it{font-size:20px;padding:3px 0}
+}
 </style>
 </head>
 <body>
@@ -332,7 +359,7 @@ function viewCal() {
     const cs = S.cards.filter(c => onDay(c, k)), dots = cs.slice(0, 4).map(c => '<i class="' + (c.done && c.done[k] ? "k" : "") + '"></i>').join("");
     g += '<button class="cell ' + (d.getMonth() !== mo ? "o " : "") + (k === calSel ? "sel " : "") + (k === T ? "td" : "") + '" data-act="sel" data-d="' + k + '"><span class="d">' + d.getDate() + '</span><span class="dots">' + dots + '</span></button>';
   }
-  return head("Calendar", "", true) + '<main><div class="cal-h"><button class="ib" data-act="mprev">' + I.prev + '</button><b>' + MONTHS[mo] + " " + y + '</b><button class="ib" data-act="mnext">' + I.next + '</button></div><div class="grid">' + g + '</div><div class="sec">' + (calSel === T ? "Today" : nice(calSel)) + '</div>' + dayList(calSel, "Add a task for " + nice(calSel) + "…") + '</main>';
+  return head("Calendar", "", true) + '<main><div class="calw"><div class="calg"><div class="cal-h"><button class="ib" data-act="mprev">' + I.prev + '</button><b>' + MONTHS[mo] + " " + y + '</b><button class="ib" data-act="mnext">' + I.next + '</button></div><div class="grid">' + g + '</div></div><div class="calr"><div class="sec">' + (calSel === T ? "Today" : nice(calSel)) + '</div>' + dayList(calSel, "Add a task for " + nice(calSel) + "…") + '</div></div></main>';
 }
 function head(title, sub, tools) {
   return '<header><div><h1>' + esc(title) + '</h1>' + (sub ? '<div class="sub">' + esc(sub) + '</div>' : "") + '</div>' + (tools ? '<div class="hb"><button class="ib ' + (reorder ? "on" : "") + '" data-act="reorder" aria-label="Edit list">' + I.sort + '</button><button class="ib" data-act="ambient" aria-label="Dim mode">' + I.moon + '</button><button class="ib" data-act="settings" aria-label="Settings">' + I.gear + '</button></div>' : "") + '</header>';
@@ -527,11 +554,10 @@ function ambRender() {
   const d = new Date(), D = todayStr();
   const cards = S.cards.filter(c => onDay(c, D)), isDone = c => !!(c.done && c.done[D]), nd = cards.filter(isDone).length, f = cards.length ? nd / cards.length : 0;
   let h = d.getHours() % 12 || 12; const clk = h + ":" + pad(d.getMinutes());
-  AIN.innerHTML = '<div class="clk">' + clk + '</div><div class="dt">' + DAYS[d.getDay()] + ", " + MONTHS[d.getMonth()] + " " + d.getDate() + '</div>' +
-    (cards.length ? '<div class="abar"><i style="width:' + Math.round(f * 100) + '%"></i></div>' : "") +
+  AIN.innerHTML = '<div class="al"><div class="clk">' + clk + '</div><div class="dt">' + DAYS[d.getDay()] + ", " + MONTHS[d.getMonth()] + " " + d.getDate() + '</div>' +
+    (cards.length ? '<div class="abar"><i style="width:' + Math.round(f * 100) + '%"></i></div>' : "") + '</div><div class="ar">' +
     cards.slice(0, 8).map(c => '<div class="it' + (isDone(c) ? " dn" : "") + '">' + '<span class="dd">' + (isDone(c) ? "●" : "○") + "</span> " + esc(c.title) + '</div>').join("") +
-    (cards.length > 8 ? '<div class="ct">+' + (cards.length - 8) + ' more</div>' : "") +
-    "";
+    (cards.length > 8 ? '<div class="ct">+' + (cards.length - 8) + ' more</div>' : "") + '</div>';
   const dx = ((d.getMinutes() * 7) % 21) - 10, dy = ((d.getMinutes() * 13) % 21) - 10; // tiny drift to avoid OLED burn-in
   AIN.style.transform = "translate(" + dx + "px," + dy + "px)";
 }
@@ -547,7 +573,7 @@ function bump() {
 
 /* ---------- wake lock ---------- */
 const NOSLEEP = "data:video/mp4;base64,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";
-let nsVideo = null, awakeOK = false;
+let nsVideo = null, awakeOK = false, videoOn = false, lastTry = 0;
 function startVideoWake() {
   try {
     if (!nsVideo) {
@@ -555,20 +581,25 @@ function startVideoWake() {
       nsVideo.style.cssText = "position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:.01;pointer-events:none"; document.body.appendChild(nsVideo);
     }
     const pr = nsVideo.play();
-    if (pr && pr.then) pr.then(() => { awakeOK = true; wakeMsg = "Screen is being kept on (video method)."; }, () => { awakeOK = false; wakeMsg = "Tap anywhere in the app once to keep the screen on."; });
+    if (pr && pr.then) pr.then(() => { awakeOK = true; videoOn = true; wakeMsg = "Screen is being kept on (backup video method; the system wake lock was refused)."; }, () => { awakeOK = false; wakeMsg = "Tap anywhere in the app once to keep the screen on."; });
   } catch (e) { wakeMsg = "Couldn't keep the screen on automatically. Set Auto-Lock to Never in iOS Settings."; }
 }
 async function requestWake() {
   if (!S.settings.wake) return;
   try {
     if (!("wakeLock" in navigator)) throw {name: "unsupported"};
-    wakeLock = await navigator.wakeLock.request("screen"); awakeOK = true; wakeMsg = "Screen will stay on while the app is open.";
+    wakeLock = await navigator.wakeLock.request("screen"); awakeOK = true; wakeMsg = "Screen will stay on (system wake lock).";
+    try { if (nsVideo) nsVideo.pause(); } catch (e2) {} videoOn = false;
     wakeLock.addEventListener("release", () => { wakeLock = null; awakeOK = false; });
   } catch (e) { wakeMsg = "System wake lock refused (" + (e && e.name || "blocked") + "), using backup method."; startVideoWake(); }
 }
 function releaseWake() { try { if (wakeLock) wakeLock.release(); } catch (e) {} wakeLock = null; awakeOK = false; try { if (nsVideo) nsVideo.pause(); } catch (e) {} wakeMsg = "Screen can sleep normally."; }
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { if (S.settings.wake && !awakeOK) requestWake(); checkDay(); } });
-document.addEventListener("pointerdown", () => { if (S.settings.wake && !awakeOK) requestWake(); }, {capture: true, passive: true});
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { if (S.settings.wake && (!awakeOK || (videoOn && !wakeLock))) requestWake(); checkDay(); } });
+document.addEventListener("pointerdown", () => {
+  if (!S.settings.wake) return;
+  if (!awakeOK) requestWake();
+  else if (videoOn && !wakeLock && Date.now() - lastTry > 20000) { lastTry = Date.now(); requestWake(); }
+}, {capture: true, passive: true});
 
 /* ---------- midnight rollover ---------- */
 function checkDay() { const t = todayStr(); if (t !== lastDay) { lastDay = t; calSel = t; calMonth = new Date(parse(t).getFullYear(), parse(t).getMonth(), 1); if (!MD.innerHTML) render(); if (ambOn) ambRender(); } }
